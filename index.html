@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="description" content="O-Bailia Restaurant — House of Taste. Lava Burgers, Crown Crust Pizzas, Crispy Broast & more. Order online from Sanghar, Sindh." />
+  <title>O-Bailia Restaurant — House of Taste</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!--
+    BUG FIX: Firebase module script runs async. We use top-level await
+    so __firestoreReady is set before 'firebase-ready' is dispatched.
+    app.js uses `defer` so it runs after HTML parse — safe to read flags.
+  -->
+  <script type="module">
+    try {
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+      const { getFirestore }  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+      window.__firebaseApp = initializeApp({
+        apiKey:            "AIzaSyDEMO_REPLACE_WITH_REAL_KEY",
+        authDomain:        "o-bailia.firebaseapp.com",
+        projectId:         "o-bailia",
+        storageBucket:     "o-bailia.appspot.com",
+        messagingSenderId: "123456789",
+        appId:             "1:123456789:web:abcdef123456"
+      });
+      window.__firestore      = getFirestore(window.__firebaseApp);
+      window.__firestoreReady = true;
+    } catch (err) {
+      console.warn('[O-Bailia] Firebase init error:', err.message);
+      window.__firestoreReady = false;
+    } finally {
+      // Always dispatch — app.js must never wait forever
+      document.dispatchEvent(new Event('firebase-ready'));
+    }
+  </script>
+
+  <!-- defer: runs after DOM parse, after firebase module has a chance to run -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+  <!-- ══ NOISE OVERLAY ══ -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <!-- ══ TOAST ══ -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ══ CART DRAWER ══ -->
+  <div id="cart-overlay" class="cart-overlay" role="dialog" aria-modal="true" aria-label="Your cart">
+    <div class="cart-drawer" id="cart-drawer">
+      <div class="cart-header">
+        <div class="cart-title">
+          <span aria-hidden="true">🛒</span>
+          <span>Your Order</span>
+        </div>
+        <button class="cart-close-btn" id="cart-close-btn" type="button" aria-label="Close cart">✕</button>
+      </div>
+      <div class="cart-body" id="cart-body"></div>
+      <div class="cart-footer" id="cart-footer"></div>
+    </div>
+  </div>
+
+  <!-- ══ NAVBAR ══ -->
+  <header class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <div class="brand">
+        <div class="brand-logomark" aria-hidden="true">OB</div>
+        <div class="brand-text">
+          <span class="brand-name">O-Bailia</span>
+          <span class="brand-tagline">House of Taste</span>
+        </div>
+      </div>
+      <button class="cart-trigger" id="cart-trigger-btn" type="button" aria-label="Open cart">
+        <span class="cart-trigger-icon" aria-hidden="true">🛒</span>
+        <span class="cart-trigger-label">Cart</span>
+        <span class="cart-badge" id="cart-badge" aria-hidden="true">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ══ HERO ══ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-grid" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb--1" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb--2" aria-hidden="true"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow reveal">Sanghar's #1 Fast Food Destination</p>
+      <h1 class="hero-headline reveal">
+        Where Every Bite<br /><em>Ignites</em> Your Soul
+      </h1>
+      <p class="hero-sub reveal">
+        Lava Burgers · Crown Crust Pizzas · Hot &amp; Sour Soups · Crispy Broast<br />
+        <span class="hero-location">📍 Kot Sultan, Nawabshah Road, Sanghar, Sindh</span>
+      </p>
+      <div class="hero-actions reveal">
+        <a href="#menu" class="btn btn--primary">Explore Menu</a>
+        <a href="#about" class="btn btn--ghost">Our Story</a>
+      </div>
+    </div>
+    <div class="hero-badge reveal" aria-hidden="true">
+      <span class="hero-badge-text">🔥 ORDER</span>
+      <span class="hero-badge-sub">VIA WHATSAPP</span>
+    </div>
+  </section>
+
+  <!-- ══ FEATURES STRIP ══ -->
+  <section class="features-strip">
+    <div class="features-inner">
+      <div class="feature-chip reveal"><span>⚡</span> Fast Delivery</div>
+      <div class="feature-chip reveal"><span>🍔</span> Lava Burgers</div>
+      <div class="feature-chip reveal"><span>🍕</span> Crown Crust</div>
+      <div class="feature-chip reveal"><span>🍜</span> Soups</div>
+      <div class="feature-chip reveal"><span>🍗</span> Crispy Broast</div>
+      <div class="feature-chip reveal"><span>📱</span> WhatsApp Order</div>
+    </div>
+  </section>
+
+  <!-- ══ MENU SECTION ══ -->
+  <section class="menu-section" id="menu">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-eyebrow">— The Menu —</span>
+        <h2 class="section-title">What's <em>Hot</em> Today</h2>
+      </div>
+
+      <div class="filter-tabs" id="filter-tabs" role="tablist" aria-label="Menu categories">
+        <button class="filter-tab active" data-filter="all"     role="tab" aria-selected="true"  type="button">All</button>
+        <button class="filter-tab"        data-filter="burgers" role="tab" aria-selected="false" type="button">Premium Burgers</button>
+        <button class="filter-tab"        data-filter="pizzas"  role="tab" aria-selected="false" type="button">Special Pizzas</button>
+        <button class="filter-tab"        data-filter="soups"   role="tab" aria-selected="false" type="button">Soups &amp; Appetizers</button>
+        <button class="filter-tab"        data-filter="broast"  role="tab" aria-selected="false" type="button">Fried &amp; Broast</button>
+        <button class="filter-tab"        data-filter="rolls"   role="tab" aria-selected="false" type="button">Rolls &amp; Parathas</button>
+      </div>
+
+      <div class="menu-grid" id="menu-grid" role="list" aria-label="Menu items">
+        <!-- Skeleton placeholders replaced by JS -->
+        <div class="menu-card skeleton" aria-hidden="true"></div>
+        <div class="menu-card skeleton" aria-hidden="true"></div>
+        <div class="menu-card skeleton" aria-hidden="true"></div>
+        <div class="menu-card skeleton" aria-hidden="true"></div>
+        <div class="menu-card skeleton" aria-hidden="true"></div>
+        <div class="menu-card skeleton" aria-hidden="true"></div>
+      </div>
+
+      <div class="empty-state" id="empty-state" style="display:none;" aria-live="polite">
+        <div class="empty-icon" aria-hidden="true">🍽️</div>
+        <p>No items found in this category.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ABOUT ══ -->
+  <section class="about-section" id="about">
+    <div class="container about-grid">
+      <div class="about-visual reveal" aria-hidden="true">
+        <div class="about-visual-box">
+          <div class="about-visual-inner">
+            <span class="about-visual-logo">OB</span>
+            <span class="about-visual-tagline">House of Taste</span>
+          </div>
+          <!-- BUG FIX: use explicit class names instead of :first-of-type -->
+          <div class="about-stat about-stat--left">
+            <span class="about-stat-num">50+</span>
+            <span class="about-stat-label">Menu Items</span>
+          </div>
+          <div class="about-stat about-stat--right">
+            <span class="about-stat-num">★ 4.9</span>
+            <span class="about-stat-label">Customer Rating</span>
+          </div>
+        </div>
+      </div>
+      <div class="about-content reveal">
+        <span class="section-eyebrow">— About Us —</span>
+        <h2 class="section-title">Born in Sanghar,<br /><em>Loved</em> by All</h2>
+        <p class="about-text">
+          O-Bailia Restaurant is Sanghar's premier fast-casual dining destination.
+          Nestled on Nawabshah Road, we craft bold flavours through our legendary
+          Lava Burgers, hand-stretched Crown Crust Pizzas, and hearty continental
+          spreads — all prepared with the freshest local ingredients and an
+          unyielding passion for taste.
+        </p>
+        <p class="about-text">
+          Our kitchen never sleeps. Whether you crave a midnight Broast or a spicy
+          Hot &amp; Sour Soup on a winter evening, O-Bailia delivers warmth, taste,
+          and speed — straight to your door via WhatsApp ordering.
+        </p>
+        <div class="about-info-row">
+          <div class="about-info-chip">📍 Kot Sultan, Nawabshah Road, Sanghar</div>
+          <div class="about-info-chip">📞 +92 335 7367364</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <div class="brand-logomark brand-logomark--sm" aria-hidden="true">OB</div>
+        <div>
+          <div class="brand-name">O-Bailia Restaurant</div>
+          <div class="brand-tagline">House of Taste — Sanghar, Sindh</div>
+        </div>
+      </div>
+      <p class="footer-copy">&copy; 2025 O-Bailia Restaurant. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
