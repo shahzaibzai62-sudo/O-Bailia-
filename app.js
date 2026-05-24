@@ -856,7 +856,8 @@ function initAdminUI() {
   const loginBtn  = document.getElementById('admin-login-btn');
   const logoutBtn = document.getElementById('admin-logout-btn');
   const panelBtn  = document.getElementById('admin-panel-btn');
-  const closeBtn  = document.getElementById('admin-panel-close');
+  // BUG FIX: HTML uses 'admin-close-btn', not 'admin-panel-close'
+  const closeBtn  = document.getElementById('admin-close-btn') || document.getElementById('admin-panel-close');
 
   if (loginBtn)  loginBtn.addEventListener('click', showAdminLoginModal);
   if (logoutBtn) logoutBtn.addEventListener('click', adminLogout);
@@ -951,6 +952,56 @@ function getFreeTables()     { return tablesData.filter(t => !t.reserved); }
 function getReservedTables() { return tablesData.filter(t =>  t.reserved); }
 
 function initReservationForm() {
+  // BUG FIX: HTML uses 'reserve-form' and 'reserve-overlay', not 'reservation-form'
+  // Also wire up FAB and hero reserve buttons to open the modal
+  const reserveOverlay  = document.getElementById('reserve-overlay');
+  const reserveCloseBtn = document.getElementById('reserve-close-btn');
+  const reserveFabBtn   = document.getElementById('reserve-fab-btn');
+
+  const openReserveModal = () => {
+    if (reserveOverlay) {
+      reserveOverlay.classList.add('open');
+      reserveOverlay.style.display = 'flex';
+    }
+  };
+  const closeReserveModal = () => {
+    if (reserveOverlay) {
+      reserveOverlay.classList.remove('open');
+      reserveOverlay.style.display = '';
+    }
+  };
+
+  if (reserveFabBtn)   reserveFabBtn.addEventListener('click', openReserveModal);
+  if (reserveCloseBtn) reserveCloseBtn.addEventListener('click', closeReserveModal);
+  if (reserveOverlay)  reserveOverlay.addEventListener('click', (e) => { if (e.target === reserveOverlay) closeReserveModal(); });
+
+  // Wire reserve submit button to WhatsApp (HTML uses WhatsApp flow, not Firestore form submit)
+  const reserveSubmitBtn = document.getElementById('reserve-submit-btn');
+  if (reserveSubmitBtn) {
+    reserveSubmitBtn.addEventListener('click', () => {
+      const name     = document.getElementById('r-name')?.value.trim()     || '';
+      const phone    = document.getElementById('r-phone')?.value.trim()    || '';
+      const date     = document.getElementById('r-date')?.value            || '';
+      const time     = document.getElementById('r-time')?.value            || '';
+      const guests   = document.getElementById('r-guests')?.value          || '2';
+      const occasion = document.getElementById('r-occasion')?.value        || 'None';
+      const notes    = document.getElementById('r-notes')?.value.trim()    || '';
+
+      if (!name)  { showToast('⚠️ Please enter your name.');   return; }
+      if (!phone) { showToast('⚠️ Please enter phone number.'); return; }
+      if (!date)  { showToast('⚠️ Please select a date.');      return; }
+      if (!time)  { showToast('⚠️ Please select a time.');      return; }
+
+      const msg = encodeURIComponent(
+        `Hi O-Bailia! 📅 Table Reservation Request:\nName: ${name}\nPhone: ${phone}\nDate: ${date}\nTime: ${time}\nGuests: ${guests}\nOccasion: ${occasion}\nNotes: ${notes || 'None'}`
+      );
+      window.open(`https://wa.me/${settings.waNumber}?text=${msg}`, '_blank', 'noopener');
+      closeReserveModal();
+      showToast('✅ Redirecting to WhatsApp for confirmation!');
+    });
+  }
+
+  // Legacy Firestore form (admin panel reservation form)
   const form = document.getElementById('reservation-form');
   if (!form) return;
 
@@ -1085,26 +1136,44 @@ async function askAIAssistant(userMessage) {
 }
 
 function initAIChat() {
-  const form      = document.getElementById('ai-chat-form');
-  const input     = document.getElementById('ai-chat-input');
-  const messagesEl = document.getElementById('ai-chat-messages');
-  const toggleBtn = document.getElementById('ai-chat-toggle');
-  const chatBox   = document.getElementById('ai-chat-box');
+  // BUG FIX: Updated IDs to match HTML — was using wrong ai-chat-* IDs
+  const input      = document.getElementById('assistant-input');
+  const messagesEl = document.getElementById('assistant-messages');
+  const sendBtn    = document.getElementById('assistant-send-btn');
+  const overlay    = document.getElementById('assistant-overlay');
+  const closeBtn   = document.getElementById('assistant-close-btn');
+  const fabBtn     = document.getElementById('assistant-fab-btn');
 
-  if (toggleBtn && chatBox) {
-    toggleBtn.addEventListener('click', () => {
-      const isOpen = chatBox.classList.toggle('open');
-      toggleBtn.setAttribute('aria-expanded', isOpen);
-      if (isOpen && messagesEl && !messagesEl.children.length) {
+  // Open/close assistant drawer via FAB
+  if (fabBtn && overlay) {
+    fabBtn.addEventListener('click', () => {
+      overlay.classList.add('open');
+      overlay.style.display = 'flex';
+      if (messagesEl && !messagesEl.children.length) {
         appendAIMessage('assistant', "👋 Hi! I'm your O-Bailia assistant. Ask me about our menu, prices, table availability, or anything else!");
+      }
+      if (input) input.focus();
+    });
+  }
+
+  if (closeBtn && overlay) {
+    closeBtn.addEventListener('click', () => {
+      overlay.classList.remove('open');
+      overlay.style.display = '';
+    });
+  }
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+        overlay.style.display = '';
       }
     });
   }
 
-  if (!form || !input || !messagesEl) return;
+  if (!input || !messagesEl || !sendBtn) return;
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  const sendMessage = async () => {
     const msg = input.value.trim();
     if (!msg) return;
     input.value = '';
@@ -1114,6 +1183,11 @@ function initAIChat() {
     const reply    = await askAIAssistant(msg);
     typingEl.remove();
     appendAIMessage('assistant', reply);
+  };
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
   });
 }
 
