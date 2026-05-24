@@ -8,6 +8,7 @@
   --bg-dark:       #0A0A0A;
   --crimson-neon:  #E63946;
   --flame-gold:    #F4A261;
+  --gold-logo:     #D4AF37;   /* BUG FIX: Added — logo/loading screen gold, distinct from flame-gold */
   --bg-card:       #121212;
   --bg-card-hover: #181818;
   --text-primary:  #F5F5F7;
@@ -55,7 +56,8 @@ ul, ol { list-style: none; }
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
+  /* BUG FIX: was 9999 — conflicted with loading-screen (9999) and toast (10000). Lowered to 500. */
+  z-index: 500;
   opacity: 0.028;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
@@ -362,6 +364,32 @@ ul, ol { list-style: none; }
   outline: none;
 }
 .btn--full { width: 100%; }
+
+/* BUG FIX: btn--reserve-hero moved from inline HTML <style> to stylesheet */
+.btn--reserve-hero {
+  background: transparent;
+  border: 2px solid var(--gold-logo, #D4AF37);
+  color: var(--gold-logo, #D4AF37);
+  padding: .75rem 1.75rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: .85rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+.btn--reserve-hero:hover, .btn--reserve-hero:focus-visible {
+  background: var(--gold-logo, #D4AF37);
+  color: #0A0A0A;
+  box-shadow: 0 0 24px rgba(212,175,55,.5);
+  outline: none;
+}
+
 .btn--gold {
   background: linear-gradient(135deg, var(--flame-gold), #e5903c);
   color: #0A0A0A;
