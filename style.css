@@ -75,10 +75,17 @@ ul, ol { list-style: none; }
   opacity: 0;
   transform: translateY(28px);
   transition: opacity 0.65s ease, transform 0.65s ease;
+  /* BUG FIX: Safety fallback — if JS observer never fires (race condition on mobile),
+     force visible after 2s so hero content is never permanently hidden */
+  animation: reveal-fallback 0.65s ease 2s forwards;
 }
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
+  animation: none; /* JS triggered it — cancel the CSS fallback */
+}
+@keyframes reveal-fallback {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ── TOAST ───────────────────────────────────────────────────── */
@@ -1821,16 +1828,7 @@ ul, ol { list-style: none; }
   box-shadow: 0 0 32px rgba(230,57,70,0.55);
 }
 
-/* ── STAGGER REVEAL ──────────────────────────────────────────── */
-.reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.65s ease, transform 0.65s ease;
-}
-.reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+/* ── STAGGER REVEAL (duplicate removed — see primary definition above) ──── */
 /* Stagger children */
 .stagger-parent .reveal:nth-child(1)  { transition-delay: 0.05s; }
 .stagger-parent .reveal:nth-child(2)  { transition-delay: 0.12s; }
