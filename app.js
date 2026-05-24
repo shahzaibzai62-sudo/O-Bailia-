@@ -257,6 +257,28 @@ function observeRevealElements(root) {
   const targets = scope.querySelectorAll('.reveal:not(.visible)');
   if (!targets.length) return;
 
+  // BUG FIX: Hero elements are already in viewport on load — IntersectionObserver
+  // may not fire for them (race condition, especially on mobile). Fix: immediately
+  // make above-fold elements visible using rAF, use observer only for below-fold.
+  const vH = window.innerHeight || document.documentElement.clientHeight;
+
+  const belowFold = [];
+  targets.forEach((el, i) => {
+    if (!el.style.transitionDelay) {
+      el.style.transitionDelay = `${Math.min(i * 0.06, 0.42)}s`;
+    }
+    const rect = el.getBoundingClientRect();
+    if (rect.top < vH + 60) {
+      // Already in/near viewport — trigger immediately via rAF so transition plays
+      requestAnimationFrame(() => el.classList.add('visible'));
+    } else {
+      belowFold.push(el);
+    }
+  });
+
+  if (!belowFold.length) return;
+
+  // BUG FIX: removed negative rootMargin that was blocking near-bottom elements
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
@@ -264,15 +286,9 @@ function observeRevealElements(root) {
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+  }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' });
 
-  targets.forEach((el, i) => {
-    // Only set delay if not already manually set
-    if (!el.style.transitionDelay) {
-      el.style.transitionDelay = `${Math.min(i * 0.06, 0.42)}s`;
-    }
-    observer.observe(el);
-  });
+  belowFold.forEach(el => observer.observe(el));
 }
 
 /* Kick off observation for static HTML elements on first load */
@@ -1758,7 +1774,10 @@ async function waitForFirebaseAndInit() {
 /* ─────────────────────────────────────────────────────────────── */
 function boot() {
   initNavbarScroll();
-  initRevealObserver();
+  // BUG FIX: Run reveal observer after first paint using double rAF.
+  // On mobile, elements already in viewport weren't triggering IntersectionObserver
+  // because getBoundingClientRect() returns 0 before first layout paint.
+  requestAnimationFrame(() => requestAnimationFrame(() => initRevealObserver()));
   initLazyImages(null);        // lazy load any static images in HTML
   triggerAnimations(null);     // trigger data-animate elements on page
   initCartUI();
