@@ -88,8 +88,9 @@ ul, ol { list-style: none; }
 }
 
 /* ── HERO CONTENT: ALWAYS VISIBLE (nuclear override) ─────────── */
-/* Hero elements no longer have .reveal class (removed from HTML).
-   !important rules guarantee visibility regardless of any other CSS. */
+/* Hero elements may have .reveal class. These rules override .reveal
+   so hero is ALWAYS visible regardless of JS timing. */
+.hero .reveal,
 .hero *,
 .hero-content,
 .hero-eyebrow,
