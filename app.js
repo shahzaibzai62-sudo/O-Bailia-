@@ -1792,12 +1792,17 @@ async function waitForFirebaseAndInit() {
 function boot() {
   initNavbarScroll();
 
-  // BUG FIX: Hero reveals are handled entirely by the loading screen script in HTML.
-  // Running observeRevealElements() too early can mark hero elements 'visible' while
-  // the loading screen is covering them — the transition fires hidden and hero stays blank.
-  // Only observe below-fold sections (menu, about, footer) after a safe delay.
+  // BUG FIX: Hero reveals are handled by hideLoadingScreen() in index.html.
+  // For extra safety, also force hero elements visible here after a short delay
+  // in case the loading screen script already ran before app.js loaded.
   setTimeout(function() {
-    // Only observe non-hero reveal elements
+    document.querySelectorAll('.hero .reveal, .hero-content > *').forEach(function(el) {
+      el.classList.add('visible');
+    });
+  }, 500);
+
+  // Observe non-hero below-fold sections after hero is safe
+  setTimeout(function() {
     var belowFoldSections = document.querySelectorAll(
       '.menu-section .reveal, .about-section .reveal, .footer .reveal'
     );
@@ -1806,7 +1811,7 @@ function boot() {
         observeRevealElements(el.closest('section') || el.parentElement);
       }
     });
-  }, 2500);
+  }, 2000);
 
   initLazyImages(null);
   triggerAnimations(null);
